@@ -3,7 +3,9 @@ package com.playwright.scrapper.util;
 import com.playwright.scrapper.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScrapperUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScrapperUtil.class);
@@ -11,7 +13,7 @@ public class ScrapperUtil {
     public void printFoundLinks(List<Link> links) {
         if (links.size() > 0) {
             LOGGER.info("=== BELOW LIST OF FOUND LINKS ===");
-            links.forEach((link) -> LOGGER.info("'{}' - '{}'", link.name(), link.url()));
+            links.forEach((link) -> LOGGER.info("'{}' - '{}'", link.text(), link.link()));
             LOGGER.info("=== THE LIST IS FINISHED ===");
             LOGGER.info("=== TOTAL COUNT: {} ===", links.size());
         } else {
@@ -23,8 +25,64 @@ public class ScrapperUtil {
         LOGGER.info("=== REMOVING LINKS WITHOUT TEXT AND WHITESPACES");
         String whitespacesRegex = "^\\s+$";
         return links.stream()
-                .filter(link -> !link.name().isEmpty() && !link.name().matches(whitespacesRegex))
+                .filter(link -> !link.text().isEmpty() && !link.text().matches(whitespacesRegex))
                 .toList();
-
     }
+
+    public List<Link> removeLinksWithSharpSymbol(List<Link> links) {
+        LOGGER.info("=== REMOVING LINKS WITH SHARP '#' SYMBOL");
+        return links.stream()
+                .filter(link -> !"#".equals(link.link().trim()))
+                .toList();
+    }
+
+    public List<Link> removeDuplicationLinks(List<Link> links) {
+        LOGGER.info("=== REMOVING DUPLICATION LINKS");
+        return links.stream()
+                .distinct()
+                .toList();
+    }
+
+    public List<Link> filterInternalLinks(List<Link> links, String domain) {
+        LOGGER.info("=== FILTERING INTERNAL LINKS ONLY ===");
+        return links.stream()
+                .filter(l -> l.link() != null && !l.link().isBlank())
+                .filter(l -> {
+                    String url = l.link().trim();
+
+                    if (url.startsWith("/") && !url.startsWith("//")) {
+                        return true;
+                    }
+
+                    try {
+                        URI uri = new URI(url);
+                        String host = uri.getHost();
+
+                        if (host == null) {
+                            return url.contains(domain);
+                        }
+
+                        return host.equals(domain) || host.endsWith("." + domain);
+
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Link> aggregateInternalLinks(List<Link> links, String domain) {
+        LOGGER.info("=== AGGREGATE INTERNAL LINKS ===");
+
+        return links.stream()
+                .map(link -> {
+                    if (link.link().startsWith("/")) {
+                        return new Link(link.text(), "https://" + domain + link.link()
+                        );
+                    }
+                    return link;
+                })
+                .toList();
+    }
+
 }

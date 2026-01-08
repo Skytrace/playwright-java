@@ -3,17 +3,15 @@ package com.playwright.scrapper;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import com.playwright.scrapper.util.ScrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Main extends BaseScrapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-    private static final String MAIN_PAGE = "https://playwright.dev";
+    private static final String DOMAIN = "wccftech.com";
     private ScrapperUtil scrapperUtil = new ScrapperUtil();
 
     public BrowserContext initPlayWright() {
@@ -26,7 +24,7 @@ public class Main extends BaseScrapper {
         Main main = new Main();
         BrowserContext playWrightContext = main.initPlayWright();
         Page page = playWrightContext.newPage();
-        page.navigate(MAIN_PAGE);
+        page.navigate("https://" + DOMAIN);
 
         List<Link> actualLinks = new ArrayList<>();
         page.getByRole(AriaRole.LINK).elementHandles().stream()
@@ -38,8 +36,22 @@ public class Main extends BaseScrapper {
         List<Link> filteredLinksWithoutText = main.scrapperUtil.removeLinksWithoutText(actualLinks);
         main.scrapperUtil.printFoundLinks(filteredLinksWithoutText);
 
-        closeAll();
 
+        List<Link> filteredLinksWithoutSharpSymbol = main.scrapperUtil.removeLinksWithSharpSymbol(filteredLinksWithoutText);
+        main.scrapperUtil.printFoundLinks(filteredLinksWithoutSharpSymbol);
+
+        List<Link> linksWithoutDuplications = main.scrapperUtil.removeDuplicationLinks(filteredLinksWithoutSharpSymbol);
+        LOGGER.info("====== THIS LIST OF UNIQUE LINK ADDRESSES FROM THE MAIN PAGE ======");
+        main.scrapperUtil.printFoundLinks(linksWithoutDuplications);
+
+        List<Link> filteredInternalLinksOnly = main.scrapperUtil.filterInternalLinks(linksWithoutDuplications, DOMAIN);
+        main.scrapperUtil.printFoundLinks(filteredInternalLinksOnly);
+
+        List<Link> aggregationInternalLinks = main.scrapperUtil.aggregateInternalLinks(filteredInternalLinksOnly, DOMAIN);
+        LOGGER.info("====== THIS FINAL AGGREGATION LINKS LIST FROM THE MAIN PAGE ======");
+        main.scrapperUtil.printFoundLinks(aggregationInternalLinks);
+
+        closeAll();
         LOGGER.info("Research the web has been complete");
     }
 
