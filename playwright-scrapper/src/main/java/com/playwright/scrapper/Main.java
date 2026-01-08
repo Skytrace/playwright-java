@@ -36,7 +36,6 @@ public class Main extends BaseScrapper {
         List<Link> filteredLinksWithoutText = main.scrapperUtil.removeLinksWithoutText(actualLinks);
         main.scrapperUtil.printFoundLinks(filteredLinksWithoutText);
 
-
         List<Link> filteredLinksWithoutSharpSymbol = main.scrapperUtil.removeLinksWithSharpSymbol(filteredLinksWithoutText);
         main.scrapperUtil.printFoundLinks(filteredLinksWithoutSharpSymbol);
 
@@ -45,6 +44,7 @@ public class Main extends BaseScrapper {
         main.scrapperUtil.printFoundLinks(linksWithoutDuplications);
 
         List<Link> filteredInternalLinksOnly = main.scrapperUtil.filterInternalLinks(linksWithoutDuplications, DOMAIN);
+        LOGGER.info("====== THIS LIST OF INTERNAL LINKS THE MAIN PAGE ======");
         main.scrapperUtil.printFoundLinks(filteredInternalLinksOnly);
 
         List<Link> aggregationInternalLinks = main.scrapperUtil.aggregateInternalLinks(filteredInternalLinksOnly, DOMAIN);
