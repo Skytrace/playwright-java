@@ -4,13 +4,16 @@ import com.playwright.scrapper.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.URI;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ScrapperUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScrapperUtil.class);
 
-    public void printFoundLinks(List<Link> links) {
+    public void printFoundLinks(Collection<Link> links) {
         if (links.size() > 0) {
             LOGGER.info("=== BELOW LIST OF FOUND LINKS ===");
             links.forEach((link) -> LOGGER.info("'{}' - '{}'", link.text(), link.link()));
@@ -36,14 +39,12 @@ public class ScrapperUtil {
                 .toList();
     }
 
-    public List<Link> removeDuplicationLinks(List<Link> links) {
+    public Set<Link> removeDuplicationLinks(List<Link> links) {
         LOGGER.info("=== REMOVING DUPLICATION LINKS");
-        return links.stream()
-                .distinct()
-                .toList();
+        return links.stream().collect(Collectors.toSet());
     }
 
-    public List<Link> filterInternalLinks(List<Link> links, String domain) {
+    public Set<Link> filterInternalLinks(Set<Link> links, String domain) {
         LOGGER.info("=== FILTERING INTERNAL LINKS ONLY ===");
         return links.stream()
                 .filter(l -> l.link() != null && !l.link().isBlank())
@@ -68,10 +69,10 @@ public class ScrapperUtil {
                         return false;
                     }
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
-    public List<Link> aggregateInternalLinks(List<Link> links, String domain) {
+    public Set<Link> aggregateInternalLinks(Set<Link> links, String domain) {
         LOGGER.info("=== AGGREGATE INTERNAL LINKS ===");
 
         return links.stream()
@@ -82,7 +83,7 @@ public class ScrapperUtil {
                     }
                     return link;
                 })
-                .toList();
+                .collect(Collectors.toSet());
     }
 
 }
