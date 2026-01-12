@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 public class Main extends BaseScrapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-    private static final String DOMAIN = "andreysobolev.art";
+    private static final String DOMAIN = "books.toscrape.com/index.html";
     private ScrapperUtil scrapperUtil = new ScrapperUtil();
 
     public BrowserContext initPlayWright() {
