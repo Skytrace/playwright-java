@@ -1,4 +1,4 @@
-package com.playwright.scrapper;
+package com.playwright.scrapper.model;
 
 public record Link(
         String text,

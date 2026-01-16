@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
 
-public class MainScrapper extends BaseScrapper {
+public class MainScrapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainScrapper.class);
     private static final String DOMAIN = "andreysobolev.art";
     private static Map<String, Object> taskManager = new HashMap<>();
@@ -27,8 +27,6 @@ public class MainScrapper extends BaseScrapper {
     public static void main(String[] args) {
         LOGGER.info("Started deep research of the domain: {}", DOMAIN);
         MainScrapper main = new MainScrapper();
-        main.init(taskManager);
-        main.startCrawl();
     }
 
 }
