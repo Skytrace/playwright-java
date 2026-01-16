@@ -15,53 +15,25 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 class ScraperService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScraperService.class);
-    private static final int MAX_DEPTH = 3;
+    private static final int MAX_DEPTH = 10;
     private final ScrapperUtil scrapperUtil = new ScrapperUtil();
-    private Playwright playwright;
-    private Browser browser;
-
-    protected BrowserContext getBrowserContext() {
-        try {
-            playwright = Playwright.create();
-            BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions()
-                    .setHeadless(false)
-                    .setChannel("chrome")
-                    .setArgs(Arrays.asList("--start-maximized"));
-            browser = playwright.chromium().launch(launchOptions);
-            BrowserContext context = browser.newContext(new Browser.NewContextOptions()
-                    .setViewportSize(null));
-
-            LOGGER.info("Playwright browser context initialized");
-            return context;
-        } catch (Exception e) {
-            LOGGER.error("Playwright browser context isn't initialized due to: {}", e.getMessage());
-            closeAll();
-            return null;
-        }
-    }
-
-    protected void closeAll() {
-        if (browser != null) {
-            browser.close();
-            browser = null;
-        }
-        if (playwright != null) {
-            playwright.close();
-            playwright = null;
-        }
-        LOGGER.info("Playwright resources closed");
-    }
 
     public void startCrawl(String domain) {
-        Set<String> visitedUrls = ConcurrentHashMap.newKeySet();
+        Set<String> visitedUrls = new HashSet<>();
         Queue<CrawlTask> queue = new LinkedList<>();
         Map<String, Map<String, Double>> allResults = new LinkedHashMap<>();
 
-        BrowserContext context = getBrowserContext();
-        if (context == null) return;
+        try (Playwright playwright = Playwright.create();
+             Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+                     .setHeadless(false)
+                     .setChannel("chrome")
+                     .setArgs(Arrays.asList("--start-maximized")))) {
 
-        try {
+            LOGGER.info("Browser launched for domain: {}", domain);
+
+            BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(null));
             Page page = context.newPage();
+
             String startUrl = "https://" + domain;
             queue.add(new CrawlTask(startUrl, 0));
 
@@ -76,8 +48,10 @@ class ScraperService {
             }
 
             printFinalReport(allResults);
-        } finally {
-            closeAll();
+            LOGGER.info("Finished crawling domain: {}", domain);
+
+        } catch (Exception e) {
+            LOGGER.error("Scraper error for domain {}: {}", domain, e.getMessage());
         }
     }
 
@@ -95,7 +69,6 @@ class ScraperService {
             Map<String, Double> metrics = PerformanceTracker.getPageMetrics(page);
             results.put(url, metrics);
 
-            // Сбор ссылок
             List<Link> rawLinks = new ArrayList<>();
             page.getByRole(AriaRole.LINK).elementHandles().forEach(e -> {
                 try {
@@ -103,13 +76,10 @@ class ScraperService {
                 } catch (Exception ignored) {}
             });
 
-            List<Link> linksWithoutText = scrapperUtil.removeLinksWithoutText(rawLinks);
-            List<Link> linksWithoutSharp = scrapperUtil.removeLinksWithSharpSymbol(linksWithoutText);
-            Set<Link> uniqueLinks = scrapperUtil.removeDuplicationLinks(linksWithoutSharp);
-            Set<Link> internalOnly = scrapperUtil.filterInternalLinks(uniqueLinks, domain);
-            Set<Link> finalLinks = scrapperUtil.aggregateInternalLinks(internalOnly, domain);
-
-            LOGGER.info("Found {} internal links on page {}", finalLinks.size(), url);
+            Set<Link> finalLinks = scrapperUtil.aggregateInternalLinks(
+                    scrapperUtil.filterInternalLinks(new HashSet<>(rawLinks), domain),
+                    domain
+            );
 
             for (Link nextLink : finalLinks) {
                 if (!visitedUrls.contains(nextLink.link())) {
@@ -117,7 +87,7 @@ class ScraperService {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Error processing {}: {}", url, e.getMessage());
+            LOGGER.error("Error processing page {}: {}", url, e.getMessage());
         }
     }
 
