@@ -17,10 +17,10 @@ class ScraperService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScraperService.class);
     private static final int MAX_DEPTH = 3;
     private final ScrapperUtil scrapperUtil = new ScrapperUtil();
-    private static Playwright playwright;
-    private static Browser browser;
+    private Playwright playwright;
+    private Browser browser;
 
-    protected static BrowserContext getBrowserContext() {
+    protected BrowserContext getBrowserContext() {
         try {
             playwright = Playwright.create();
             BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions()
@@ -40,7 +40,7 @@ class ScraperService {
         }
     }
 
-    protected static void closeAll() {
+    protected void closeAll() {
         if (browser != null) {
             browser.close();
             browser = null;
