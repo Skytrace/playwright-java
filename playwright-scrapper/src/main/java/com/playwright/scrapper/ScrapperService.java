@@ -10,11 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-class ScraperService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ScraperService.class);
+class ScrapperService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScrapperService.class);
     private static final int MAX_DEPTH = 10;
     private final ScrapperUtil scrapperUtil = new ScrapperUtil();
 

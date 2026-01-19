@@ -1,22 +1,18 @@
 package com.playwright.scrapper;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/api/scraper")
+@Controller
 public class ScraperController {
-    private final ScraperService scraperService;
+    private final ScrapperService scraperService;
 
-    public ScraperController(ScraperService scraperService) {
+    public ScraperController(ScrapperService scraperService) {
         this.scraperService = scraperService;
     }
 
-    @GetMapping("/start")
-    public String startScraping(@RequestParam String domain) {
-        new Thread(() -> scraperService.startCrawl(domain)).start();
-        return "Scraping process started for domain: " + domain + ". Check console for results.";
+    @GetMapping("/")
+    public String index() {
+        return "index.html";
     }
 }
