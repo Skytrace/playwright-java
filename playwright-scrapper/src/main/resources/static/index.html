@@ -1,78 +1,113 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Scraper Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .terminal {
-            background-color: #1a1a1a;
-            color: #00ff00;
-            font-family: 'Courier New', Courier, monospace;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Web Scraper Pro</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            .terminal {
+                background-color: #1a1a1a;
+                color: #00ff00;
+                font-family: 'Courier New', Courier, monospace;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
+        <div class="w-full max-w-2xl bg-white shadow-lg rounded-lg p-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Scrapper 2.0</h1>
 
-<div class="w-full max-w-2xl bg-white shadow-lg rounded-lg p-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Performance analyzer</h1>
+            <form id="scraperForm" class="space-y-4">
+                <div>
+                    <label for="domain" class="block text-sm font-medium text-gray-700">Type domain</label>
+                    <input type="text" id="domain" name="domain" required
+                           placeholder="example.com"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="w-1/6">
+                    <label for="depth" class="block text-sm font-medium text-gray-700 whitespace-nowrap">Max depth</label>
+                    <label for="depth" class="block text-sm font-small text-gray-500 whitespace-nowrap">0 - only main page</label>
+                    <input type="number" id="depth" name="depth" required min="0" max="100"
+                           placeholder="3"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
 
-    <form id="scraperForm" class="space-y-4">
-        <div>
-            <label for="domain" class="block text-sm font-medium text-gray-700">Type domain</label>
-            <input type="text" id="domain" name="domain" required
-                   placeholder="example.com"
-                   class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <div class="w-1/3">
+                    <label for="timeLoad" class="block text-sm font-medium text-gray-700 whitespace-nowrap">
+                        Display by time load
+                    </label>
+                    <p class="text-xs text-gray-500">&nbsp;</p> <!-- Отступ для выравнивания -->
+                    <div class="mt-1 flex items-center h-[42px]">
+                        <input type="checkbox" id="timeLoad" name="timeLoad"
+                               class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition duration-150 ease-in-out cursor-pointer">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn"
+                        class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
+                    Scanner staring
+                </button>
+            </form>
+
+            <div id="statusArea" class="mt-8 hidden">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">Status running:</h2>
+                <div id="terminal" class="terminal p-4 rounded-md h-48 overflow-y-auto text-sm">
+                    <p>> Load...</p>
+                </div>
+            </div>
         </div>
 
-        <button type="submit" id="submitBtn"
-                class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200">
-            Scanner staring
-        </button>
-    </form>
+        <script>
+            const form = document.getElementById('scraperForm');
+            const terminal = document.getElementById('terminal');
+            const statusArea = document.getElementById('statusArea');
+            const submitBtn = document.getElementById('submitBtn');
 
-    <div id="statusArea" class="mt-8 hidden">
-        <h2 class="text-lg font-semibold text-gray-700 mb-2">Status running:</h2>
-        <div id="terminal" class="terminal p-4 rounded-md h-48 overflow-y-auto text-sm">
-            <p>> Load...</p>
-        </div>
-    </div>
-</div>
+            form.onsubmit = async (e) => {
+                e.preventDefault();
 
-<script>
-    const form = document.getElementById('scraperForm');
-    const terminal = document.getElementById('terminal');
-    const statusArea = document.getElementById('statusArea');
-    const submitBtn = document.getElementById('submitBtn');
+                const domainValue = document.getElementById('domain').value;
+                const depthValue = parseInt(document.getElementById('depth').value);
+                const isTimeLoadValue = document.getElementById('timeLoad').checked;
 
-    form.onsubmit = async (e) => {
-        e.preventDefault();
-        const domainValue = document.getElementById('domain').value;
+                const payload = {
+                    domain: domainValue,
+                    depth: depthValue,
+                    isTimeLoad: isTimeLoadValue
+                };
 
-        statusArea.classList.remove('hidden');
-        terminal.innerHTML = `<p class="text-yellow-400">> Подготовка JSON payload...</p>`;
-        submitBtn.disabled = true;
+                console.log("Данные для отправки:", JSON.stringify(payload));
 
-        try {
-            const response = await fetch('/api/scrapper/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ domain: domainValue })
-            });
+                statusArea.classList.remove('hidden');
+                terminal.innerHTML = `<p class="text-yellow-400">> Подготовка запроса...</p>`;
+                submitBtn.disabled = true;
 
-            const message = await response.text();
+                try {
+                    const response = await fetch('/api/scrapper/start', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
 
-            terminal.innerHTML += `<p class="text-blue-300">> Отправлено: { "domain": "${domainValue}" }</p>`;
-            terminal.innerHTML += `<p class="text-green-400">> Ответ сервера: ${message}</p>`;
-        } catch (error) {
-            terminal.innerHTML += `<p class="text-red-500">> Ошибка сети: ${error.message}</p>`;
-        } finally {
-            submitBtn.disabled = false;
-        }
-    };
-</script>
-</body>
+                    const message = await response.text();
+
+                    // Отображаем лог
+                    terminal.innerHTML += `<p class="text-blue-300">> Отправлено: ${JSON.stringify(payload)}</p>`;
+
+                    if (response.ok) {
+                        terminal.innerHTML += `<p class="text-green-400">> Ответ сервера: ${message}</p>`;
+                    } else {
+                        terminal.innerHTML += `<p class="text-red-400">> Ошибка сервера (${response.status}): ${message}</p>`;
+                    }
+                } catch (error) {
+                    terminal.innerHTML += `<p class="text-red-500">> Ошибка сети: ${error.message}</p>`;
+                } finally {
+                    submitBtn.disabled = false;
+                    terminal.scrollTop = terminal.scrollHeight; // Автопрокрутка вниз
+                }
+            };
+        </script>
+    </body>
 </html>
