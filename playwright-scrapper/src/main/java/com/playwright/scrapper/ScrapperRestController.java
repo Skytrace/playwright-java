@@ -19,7 +19,7 @@ public class ScrapperRestController {
             return "Ошибка: домен не указан в теле JSON.";
         }
 
-        new Thread(() -> scraperService.startCrawl(request.domain())).start();
+        new Thread(() -> scraperService.startCrawl(request)).start();
         return "Scraping process started for domain: " + request.domain() + ". Check console for results.";
     }
 

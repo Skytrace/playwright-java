@@ -4,6 +4,7 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
 import com.playwright.scrapper.model.CrawlTask;
 import com.playwright.scrapper.model.Link;
+import com.playwright.scrapper.model.ScrapperRequest;
 import com.playwright.scrapper.util.PerformanceTracker;
 import com.playwright.scrapper.util.ScrapperUtil;
 import org.slf4j.Logger;
@@ -14,10 +15,9 @@ import java.util.*;
 @Service
 class ScrapperService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScrapperService.class);
-    private static final int MAX_DEPTH = 10;
     private final ScrapperUtil scrapperUtil = new ScrapperUtil();
 
-    public void startCrawl(String domain) {
+    public void startCrawl(ScrapperRequest request) {
         Set<String> visitedUrls = new HashSet<>();
         Queue<CrawlTask> queue = new LinkedList<>();
         Map<String, Map<String, Double>> allResults = new LinkedHashMap<>();
@@ -28,29 +28,35 @@ class ScrapperService {
                      .setChannel("chrome")
                      .setArgs(Arrays.asList("--start-maximized")))) {
 
-            LOGGER.info("Browser launched for domain: {}", domain);
+            LOGGER.info("Browser launched for domain: {}", request.domain());
 
             BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(null));
             Page page = context.newPage();
 
-            String startUrl = "https://" + domain;
+            String startUrl = "https://" + request.domain();
             queue.add(new CrawlTask(startUrl, 0));
 
             while (!queue.isEmpty()) {
                 CrawlTask task = queue.poll();
 
-                if (task.depth() > MAX_DEPTH || visitedUrls.contains(task.url())) {
+                if (task.depth() > request.depth() || visitedUrls.contains(task.url())) {
                     continue;
                 }
 
-                processPage(page, task.url(), task.depth(), domain, visitedUrls, queue, allResults);
+                processPage(page, task.url(), task.depth(), request.domain(), visitedUrls, queue, allResults);
             }
 
-            printFinalReport(allResults);
-            LOGGER.info("Finished crawling domain: {}", domain);
+            if (request.isTimeLoad()) {
+                 //TODO add an implementation logic
+                LOGGER.warn("Currently logic is not implemented yet");
+            } else {
+                printFinalReport(allResults);
+            }
+
+            LOGGER.info("Finished crawling domain: {}", request.domain());
 
         } catch (Exception e) {
-            LOGGER.error("Scraper error for domain {}: {}", domain, e.getMessage());
+            LOGGER.error("Scraper error for domain {}: {}", request.domain(), e.getMessage());
         }
     }
 
@@ -91,7 +97,11 @@ class ScrapperService {
     }
 
     private void printFinalReport(Map<String, Map<String, Double>> results) {
-        LOGGER.info("====== FINAL PERFORMANCE REPORT ======");
+        LOGGER.info("======================================");
+        LOGGER.info("=                ***                 =");
+        LOGGER.info("=      FINAL PERFORMANCE REPORT      =");
+        LOGGER.info("=                ***                 =");
+        LOGGER.info("======================================");
         results.forEach((url, metrics) -> {
             LOGGER.info("Page: {}", url);
             if (metrics != null) {
