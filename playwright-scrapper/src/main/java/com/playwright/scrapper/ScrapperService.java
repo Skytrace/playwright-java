@@ -10,7 +10,10 @@ import com.playwright.scrapper.util.ScrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import javax.print.attribute.standard.Compression;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 class ScrapperService {
@@ -47,12 +50,25 @@ class ScrapperService {
             }
 
             if (request.isTimeLoad()) {
-                 //TODO add an implementation logic
-                LOGGER.warn("Currently logic is not implemented yet");
+                Map<String, Map<String, Double>> sortedByDesc =
+                        allResults.entrySet().stream()
+                                .filter(e -> e.getValue().containsKey("Full Page Load"))
+                                .sorted(
+                                        Comparator.<Map.Entry<String, Map<String, Double>>>comparingDouble(
+                                                e -> e.getValue().get("Full Page Load")
+                                        ).reversed()
+                                )
+                                .collect(Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (a, b) -> a,
+                                        LinkedHashMap::new
+                                ));
+
+                printFinalReport(sortedByDesc);
             } else {
                 printFinalReport(allResults);
             }
-
             LOGGER.info("Finished crawling domain: {}", request.domain());
 
         } catch (Exception e) {
