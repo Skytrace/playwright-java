@@ -5,13 +5,14 @@ import com.microsoft.playwright.options.AriaRole;
 import com.playwright.scrapper.model.CrawlTask;
 import com.playwright.scrapper.model.Link;
 import com.playwright.scrapper.model.ScrapperRequest;
+import com.playwright.scrapper.model.report.PageReport;
+import com.playwright.scrapper.model.report.PerformanceInfo;
 import com.playwright.scrapper.util.PerformanceTracker;
 import com.playwright.scrapper.util.ScrapperUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.print.attribute.standard.Compression;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ class ScrapperService {
     public void startCrawl(ScrapperRequest request) {
         Set<String> visitedUrls = new HashSet<>();
         Queue<CrawlTask> queue = new LinkedList<>();
-        Map<String, Map<String, Double>> allResults = new LinkedHashMap<>();
+        Map<String, PageReport> allResults = new HashMap<>();
 
         try (Playwright playwright = Playwright.create();
              Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
@@ -49,21 +50,17 @@ class ScrapperService {
                 processPage(page, task.url(), task.depth(), request, visitedUrls, queue, allResults);
             }
 
+            // isTimeLoad
+            // then present the report by desc in Full Page Load order
             if (request.isTimeLoad()) {
-                Map<String, Map<String, Double>> sortedByDesc =
-                        allResults.entrySet().stream()
-                                .filter(e -> e.getValue().containsKey("Full Page Load"))
-                                .sorted(
-                                        Comparator.<Map.Entry<String, Map<String, Double>>>comparingDouble(
-                                                e -> e.getValue().get("Full Page Load")
-                                        ).reversed()
-                                )
-                                .collect(Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        Map.Entry::getValue,
-                                        (a, b) -> a,
-                                        LinkedHashMap::new
-                                ));
+                Map<String, PageReport> sortedByDesc = allResults.entrySet().stream()
+                                .sorted(Comparator.comparingDouble(e -> e.getValue().performanceInfo().fullPageLoad()))
+                                        .collect(Collectors.toMap(
+                                                Map.Entry::getKey,
+                                                Map.Entry::getValue,
+                                                (a, b) -> a,
+                                                LinkedHashMap::new
+                                        )).reversed();
 
                 printFinalReport(sortedByDesc);
             } else {
@@ -78,7 +75,7 @@ class ScrapperService {
 
     private void processPage(Page page, String url, int depth, ScrapperRequest req,
                              Set<String> visitedUrls, Queue<CrawlTask> queue,
-                             Map<String, Map<String, Double>> results) {
+                             Map<String, PageReport> results) {
 
         LOGGER.info(">>> [Depth {}] Processing: {}", depth, url);
         visitedUrls.add(url);
@@ -87,8 +84,8 @@ class ScrapperService {
             page.navigate(url);
             page.waitForLoadState();
 
-            Map<String, Double> metrics = PerformanceTracker.getPageMetrics(page);
-            results.put(url, metrics);
+            PerformanceInfo performanceInfo= PerformanceTracker.convertPageMetrics(PerformanceTracker.getPageMetrics(page));
+            results.put(url, new PageReport(performanceInfo));
 
             String searchPhrase = req.searchPhrase();
             if (searchPhrase != null && !searchPhrase.isEmpty()) {
@@ -119,7 +116,7 @@ class ScrapperService {
         }
     }
 
-    private void printFinalReport(Map<String, Map<String, Double>> results) {
+    private void printFinalReport(Map<String, PageReport> results) {
         LOGGER.info("======================================");
         LOGGER.info("=                ***                 =");
         LOGGER.info("=      FINAL PERFORMANCE REPORT      =");
@@ -128,7 +125,11 @@ class ScrapperService {
         results.forEach((url, metrics) -> {
             LOGGER.info("Page: {}", url);
             if (metrics != null) {
-                metrics.forEach((k, v) -> LOGGER.info("  >> {}: {} ms", k, String.format("%.2f", v)));
+                LOGGER.info(">> DNS LookUp: {} ms", String.format("%.2f", metrics.performanceInfo().dnsLookUp()));
+                LOGGER.info(">> TCP Connection: {} ms", String.format("%.2f", metrics.performanceInfo().tcpConnection()));
+                LOGGER.info(">> Time To First Byte: {} ms", String.format("%.2f", metrics.performanceInfo().timeToFirstByte()));
+                LOGGER.info(">> DOM Content Loaded: {} ms", String.format("%.2f", metrics.performanceInfo().domContentLoad()));
+                LOGGER.info(">> Full Page Loaded: {} ms", String.format("%.2f", metrics.performanceInfo().fullPageLoad()));
             }
         });
     }

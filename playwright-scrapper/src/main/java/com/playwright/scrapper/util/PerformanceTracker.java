@@ -1,6 +1,7 @@
 package com.playwright.scrapper.util;
 
 import com.microsoft.playwright.Page;
+import com.playwright.scrapper.model.report.PerformanceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,21 @@ public class PerformanceTracker {
         }
 
         return metrics;
+    }
+
+    public static PerformanceInfo convertPageMetrics(Map<String, Double> metrics) {
+        if (metrics != null && !metrics.isEmpty()) {
+            PerformanceInfo performanceInfo = new PerformanceInfo(
+                    Double.valueOf(metrics.get("DNS Lookup")),
+                    Double.valueOf(metrics.get("TCP Connection")),
+                    Double.valueOf(metrics.get("Time to First Byte (TTFB)")),
+                    Double.valueOf(metrics.get("DOM Content Loaded")),
+                    Double.valueOf(metrics.get("Full Page Load"))
+            );
+            return performanceInfo;
+        } else {
+            return null;
+        }
     }
 
     public static void logMetrics(Page page, Map<String, Double> metrics) {
