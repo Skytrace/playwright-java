@@ -84,15 +84,20 @@ class ScrapperService {
             page.navigate(url);
             page.waitForLoadState();
 
-            PerformanceInfo performanceInfo= PerformanceTracker.convertPageMetrics(PerformanceTracker.getPageMetrics(page));
-            results.put(url, new PageReport(performanceInfo));
-
+            // prepare page performance
+            PerformanceInfo performanceInfo = PerformanceTracker.convertPageMetrics(PerformanceTracker.getPageMetrics(page));
+            // count search phrases
             String searchPhrase = req.searchPhrase();
+            Map<String, Integer> searchPhrasesReport = new LinkedHashMap<>();
             if (searchPhrase != null && !searchPhrase.isEmpty()) {
+                Locator phrase = page.getByText(searchPhrase);
                 if (page.getByText(searchPhrase).isVisible()) {
+                    searchPhrasesReport.put(searchPhrase, Integer.valueOf(phrase.count()));
                     LOGGER.info("Search phrase/word '{}' was found on current page", searchPhrase);
                 }
             }
+
+            results.put(url, new PageReport(performanceInfo, searchPhrasesReport));
 
             List<Link> rawLinks = new ArrayList<>();
             page.getByRole(AriaRole.LINK).elementHandles().forEach(e -> {
@@ -123,14 +128,23 @@ class ScrapperService {
         LOGGER.info("=                ***                 =");
         LOGGER.info("======================================");
         results.forEach((url, metrics) -> {
+            LOGGER.info("======================= SPECIFIC PAGE REPORT =======================");
             LOGGER.info("Page: {}", url);
             if (metrics != null) {
+                LOGGER.info(">> *****       Page Load Performance Report       *****");
                 LOGGER.info(">> DNS LookUp: {} ms", String.format("%.2f", metrics.performanceInfo().dnsLookUp()));
                 LOGGER.info(">> TCP Connection: {} ms", String.format("%.2f", metrics.performanceInfo().tcpConnection()));
                 LOGGER.info(">> Time To First Byte: {} ms", String.format("%.2f", metrics.performanceInfo().timeToFirstByte()));
                 LOGGER.info(">> DOM Content Loaded: {} ms", String.format("%.2f", metrics.performanceInfo().domContentLoad()));
                 LOGGER.info(">> Full Page Loaded: {} ms", String.format("%.2f", metrics.performanceInfo().fullPageLoad()));
+
+                LOGGER.info(">> *****           Search Phrases Report          *****");
+                Map<String, Integer> phrases = metrics.searchPhrases();
+                phrases.forEach((phrase, count) -> {
+                    LOGGER.info(">> {}: found {} times", phrase, count);
+                });
             }
+            LOGGER.info("====================================================================");
         });
     }
 }

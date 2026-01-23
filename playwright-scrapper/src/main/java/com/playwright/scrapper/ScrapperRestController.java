@@ -16,7 +16,7 @@ public class ScrapperRestController {
     @PostMapping("/api/scrapper/start")
     public String startScraping(@RequestBody ScrapperRequest request) {
         if (request.domain() == null || request.domain().isBlank()) {
-            return "Ошибка: домен не указан в теле JSON.";
+            return "Error: domain missing in JSON body.";
         }
 
         new Thread(() -> scraperService.startCrawl(request)).start();
