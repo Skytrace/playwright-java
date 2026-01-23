@@ -1,170 +1,227 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Scraper Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Web Scraper Pro</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+            body { font-family: 'Inter', sans-serif; }
 
-        .terminal-container {
-            background-color: #0f172a;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
+            .terminal-container {
+                background-color: #0f172a;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 10px;
-        }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: #1e293b;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #475569;
+                border-radius: 10px;
+            }
 
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #6366f1;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #6366f1;
-        }
-    </style>
-</head>
-<body class="bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col items-center justify-center p-6">
+            .toggle-checkbox:checked {
+                right: 0;
+                border-color: #6366f1;
+            }
+            .toggle-checkbox:checked + .toggle-label {
+                background-color: #6366f1;
+            }
 
-<div class="w-full max-w-lg bg-white shadow-xl rounded-2xl p-8 border border-slate-100">
-    <header class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-50 rounded-xl mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-        </div>
-        <h1 class="text-2xl font-bold tracking-tight text-slate-800">Scrapper 2.0</h1>
-        <p class="text-slate-500 text-sm mt-1">Интеллектуальный поиск по ключевым словам</p>
-    </header>
+            /* Стиль для фокуса контейнера тегов */
+            .tags-focused {
+                ring: 2px;
+                ring-color: rgba(99, 102, 241, 0.2);
+                border-color: #6366f1;
+            }
+        </style>
+    </head>
+    <body class="bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col items-center justify-center p-6">
 
-    <form id="scraperForm" class="space-y-5">
-        <!-- Поле Домена -->
-        <div class="space-y-1.5">
-            <label for="domain" class="block text-sm font-semibold text-slate-700">Целевой домен</label>
-            <input type="text" id="domain" name="domain" required placeholder="example.com"
-                   class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200">
-        </div>
+        <div class="w-full max-w-lg bg-white shadow-xl rounded-2xl p-8 border border-slate-100">
+            <header class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-50 rounded-xl mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-800">Scrapper 2.0</h1>
+                <p class="text-slate-500 text-sm mt-1">Getting website performance and additional info</p>
+            </header>
 
-        <!-- Поисковая фраза -->
-        <div class="space-y-1.5">
-            <label for="searchPhrase" class="block text-sm font-semibold text-slate-700">Поисковая фраза / слово</label>
-            <input type="text" id="searchPhrase" name="searchPhrase" required placeholder="Например: Балерина"
-                   class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200">
-        </div>
+            <form id="scraperForm" class="space-y-5">
+                <div class="space-y-1.5">
+                    <label for="domain" class="block text-sm font-semibold text-slate-700">Domain</label>
+                    <input type="text" id="domain" name="domain" required placeholder="example.com"
+                           class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-sm">
+                </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <!-- Глубина -->
-            <div class="space-y-1.5">
-                <label for="depth" class="block text-sm font-semibold text-slate-700">Глубина поиска</label>
-                <input type="number" id="depth" name="depth" required min="0" max="100" placeholder="3"
-                       class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200">
-                <p class="text-[11px] text-slate-400 italic">0 — только главная страница</p>
-            </div>
-
-            <!-- Toggle Time Load -->
-            <div class="space-y-1.5">
-                <label class="block text-sm font-semibold text-slate-700">Сортировка времени</label>
-                <div class="flex items-center h-[46px] bg-slate-50 px-3 rounded-xl border border-slate-100">
-                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                        <input type="checkbox" name="timeLoad" id="timeLoad" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 border-slate-200 appearance-none cursor-pointer transition-all duration-300 right-5"/>
-                        <label for="timeLoad" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-200 cursor-pointer transition-all duration-300"></label>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-semibold text-slate-700">Search phrases</label>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Push 'enter' for adding</span>
                     </div>
-                    <span class="ml-2 text-[10px] leading-tight text-slate-500 font-medium">По убыванию загрузки</span>
+
+                    <div id="tagsWrapper" class="flex flex-wrap gap-2 p-2 min-h-[100px] bg-white border border-slate-200 rounded-xl transition-all duration-200 text-sm cursor-text focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500">
+                        <div id="tagsContainer" class="flex flex-wrap gap-2 contents">
+                        </div>
+                        <input type="text" id="phraseInput" placeholder="Enter search words/phrases..."
+                               class="flex-1 min-w-[120px] outline-none bg-transparent py-1 px-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label for="depth" class="block text-sm font-semibold text-slate-700">Deep</label>
+                        <input type="number" id="depth" name="depth" required min="0" max="100" placeholder="3"
+                               class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-sm">
+                        <p class="text-[11px] text-slate-400 italic">0 — only main page (single page)</p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-sm font-semibold text-slate-700">Enter options</label>
+                        <div class="flex items-center h-[46px] bg-slate-50 px-3 rounded-xl border border-slate-100">
+                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="timeLoad" id="timeLoad" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 border-slate-200 appearance-none cursor-pointer transition-all duration-300 right-5"/>
+                                <label for="timeLoad" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-200 cursor-pointer transition-all duration-300"></label>
+                            </div>
+                            <span class="ml-2 text-[10px] leading-tight text-slate-500 font-bold">Time Load DESC</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn"
+                        class="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-500/30 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-indigo-100">
+                    Start scrapper
+                </button>
+            </form>
+
+            <div id="statusArea" class="mt-8 hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Execution logs</h2>
+                    <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                </div>
+
+                <div class="terminal-container rounded-xl overflow-hidden border border-slate-800">
+                    <div class="bg-slate-800/50 px-4 py-2 flex items-center space-x-1.5 border-b border-slate-800">
+                        <div class="w-2 h-2 rounded-full bg-red-500/80"></div>
+                        <div class="w-2 h-2 rounded-full bg-amber-500/80"></div>
+                        <div class="w-2 h-2 rounded-full bg-emerald-500/80"></div>
+                    </div>
+                    <div id="terminal" class="p-5 h-48 overflow-y-auto text-xs font-mono custom-scrollbar leading-relaxed">
+                        <p class="text-slate-500">> Please type...</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <button type="submit" id="submitBtn"
-                class="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-500/30 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-indigo-100">
-            Запустить сканирование
-        </button>
-    </form>
+        <script>
+            const form = document.getElementById('scraperForm');
+            const terminal = document.getElementById('terminal');
+            const statusArea = document.getElementById('statusArea');
+            const submitBtn = document.getElementById('submitBtn');
+            const phraseInput = document.getElementById('phraseInput');
+            const tagsContainer = document.getElementById('tagsContainer');
+            const tagsWrapper = document.getElementById('tagsWrapper');
 
-    <!-- Терминал -->
-    <div id="statusArea" class="mt-8 hidden space-y-3">
-        <div class="flex items-center justify-between">
-            <h2 class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Console Output</h2>
-            <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-        </div>
+            let phrasesArray = [];
 
-        <div class="terminal-container rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
-            <div class="bg-slate-800/50 px-4 py-2 flex items-center space-x-1.5 border-b border-slate-800">
-                <div class="w-2 h-2 rounded-full bg-red-500/80"></div>
-                <div class="w-2 h-2 rounded-full bg-amber-500/80"></div>
-                <div class="w-2 h-2 rounded-full bg-emerald-500/80"></div>
-            </div>
-            <div id="terminal" class="p-5 h-48 overflow-y-auto text-xs font-mono custom-scrollbar leading-relaxed">
-                <p class="text-slate-500">> Ready for input...</p>
-            </div>
-        </div>
-    </div>
-</div>
+            function renderTags() {
+                tagsContainer.innerHTML = '';
+                phrasesArray.forEach((phrase, index) => {
+                    const tag = document.createElement('div');
+                    tag.className = 'flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100 group animate-in fade-in zoom-in duration-200';
+                    tag.innerHTML = `
+                        <span class="font-medium">${phrase}</span>
+                        <button type="button" onclick="removeTag(${index})" class="text-indigo-400 hover:text-indigo-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    `;
+                    tagsContainer.appendChild(tag);
+                });
+            }
 
-<script>
-    const form = document.getElementById('scraperForm');
-    const terminal = document.getElementById('terminal');
-    const statusArea = document.getElementById('statusArea');
-    const submitBtn = document.getElementById('submitBtn');
+            function addTag(text) {
+                const phrase = text.trim();
+                if (phrase && !phrasesArray.includes(phrase)) {
+                    phrasesArray.push(phrase);
+                    renderTags();
+                }
+                phraseInput.value = '';
+            }
 
-    form.onsubmit = async (e) => {
-        e.preventDefault();
+            window.removeTag = (index) => {
+                phrasesArray.splice(index, 1);
+                renderTags();
+            };
 
-        // 1. Собираем данные
-        const domainValue = document.getElementById('domain').value;
-        const searchPhraseValue = document.getElementById('searchPhrase').value;
-        const depthValue = parseInt(document.getElementById('depth').value) || 0;
-        const isTimeLoadValue = document.getElementById('timeLoad').checked;
-
-        // 2. Создаем один объект Payload
-        const payload = {
-            domain: domainValue,
-            searchPhrase: searchPhraseValue,
-            depth: depthValue,
-            isTimeLoad: isTimeLoadValue
-        };
-
-        // UI feedback
-        statusArea.classList.remove('hidden');
-        terminal.innerHTML = `<p class="text-indigo-400">> [${new Date().toLocaleTimeString()}] Инициализация...</p>`;
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Обработка...";
-
-        try {
-            // 3. Отправляем ВЕСЬ payload
-            const response = await fetch('/api/scrapper/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            phraseInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTag(phraseInput.value);
+                } else if (e.key === 'Backspace' && phraseInput.value === '' && phrasesArray.length > 0) {
+                    phrasesArray.pop();
+                    renderTags();
+                }
             });
 
-            const message = await response.text();
+            tagsWrapper.addEventListener('click', () => {
+                phraseInput.focus();
+            });
 
-            // Лог в терминал
-            terminal.innerHTML += `<p class="text-slate-500 mt-2">> Пакет: ${JSON.stringify(payload)}</p>`;
+            form.onsubmit = async (e) => {
+                e.preventDefault();
 
-            if (response.ok) {
-                terminal.innerHTML += `<p class="text-emerald-400 font-bold mt-1">> Статус: ${message}</p>`;
-            } else {
-                terminal.innerHTML += `<p class="text-red-400 font-bold mt-1">> Ошибка ${response.status}: ${message}</p>`;
-            }
-        } catch (error) {
-            terminal.innerHTML += `<p class="text-red-500 font-bold mt-1">> Ошибка сети: ${error.message}</p>`;
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Запустить сканирование";
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-    };
-</script>
-</body>
+                if (phraseInput.value.trim()) {
+                    addTag(phraseInput.value);
+                }
+
+                const domainValue = document.getElementById('domain').value;
+                const depthValue = parseInt(document.getElementById('depth').value) || 0;
+                const isTimeLoadValue = document.getElementById('timeLoad').checked;
+
+                const payload = {
+                    domain: domainValue,
+                    searchPhrases: phrasesArray,
+                    depth: depthValue,
+                    isTimeLoad: isTimeLoadValue
+                };
+
+                statusArea.classList.remove('hidden');
+                terminal.innerHTML = `<p class="text-indigo-400">> [${new Date().toLocaleTimeString()}] Scanning initialization...</p>`;
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50');
+
+                try {
+                    const response = await fetch('/api/scrapper/start', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const message = await response.text();
+                    terminal.innerHTML += `<p class="text-slate-500 mt-2">> Request Payload: <span class="text-slate-300 font-mono text-[10px]">${JSON.stringify(payload)}</span></p>`;
+
+                    if (response.ok) {
+                        terminal.innerHTML += `<p class="text-emerald-400 font-bold mt-1">> Success: ${message}</p>`;
+                    } else {
+                        terminal.innerHTML += `<p class="text-red-400 font-bold mt-1">> Error ${response.status}: ${message}</p>`;
+                    }
+                } catch (error) {
+                    terminal.innerHTML += `<p class="text-red-500 font-bold mt-1">> Network error: ${error.message}</p>`;
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50');
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
+            };
+        </script>
+    </body>
 </html>

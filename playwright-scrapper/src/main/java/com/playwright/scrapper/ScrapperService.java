@@ -86,18 +86,21 @@ class ScrapperService {
 
             // prepare page performance
             PerformanceInfo performanceInfo = PerformanceTracker.convertPageMetrics(PerformanceTracker.getPageMetrics(page));
-            // count search phrases
-            String searchPhrase = req.searchPhrase();
-            Map<String, Integer> searchPhrasesReport = new LinkedHashMap<>();
-            if (searchPhrase != null && !searchPhrase.isEmpty()) {
-                Locator phrase = page.getByText(searchPhrase);
-                if (page.getByText(searchPhrase).isVisible()) {
-                    searchPhrasesReport.put(searchPhrase, Integer.valueOf(phrase.count()));
+
+            // count only visible search phrases
+            List<String> searchPhrases = req.searchPhrases();
+            Map<String, Long> foundPhrasesReport = new LinkedHashMap<>();
+            searchPhrases.forEach(searchPhrase -> {
+                if (searchPhrase != null && !searchPhrase.isEmpty()) {
+                    Locator phrase = page.getByText(searchPhrase);
+                    long onlyVisibleElements = phrase.elementHandles().stream().filter(e -> e.isVisible()).count();
+                    foundPhrasesReport.put(searchPhrase, Long.valueOf(onlyVisibleElements));
                     LOGGER.info("Search phrase/word '{}' was found on current page", searchPhrase);
                 }
-            }
+            });
 
-            results.put(url, new PageReport(performanceInfo, searchPhrasesReport));
+            // save page statistics
+            results.put(url, new PageReport(performanceInfo, foundPhrasesReport));
 
             List<Link> rawLinks = new ArrayList<>();
             page.getByRole(AriaRole.LINK).elementHandles().forEach(e -> {
@@ -139,7 +142,7 @@ class ScrapperService {
                 LOGGER.info(">> Full Page Loaded: {} ms", String.format("%.2f", metrics.performanceInfo().fullPageLoad()));
 
                 LOGGER.info(">> *****           Search Phrases Report          *****");
-                Map<String, Integer> phrases = metrics.searchPhrases();
+                Map<String, Long> phrases = metrics.searchPhrases();
                 phrases.forEach((phrase, count) -> {
                     LOGGER.info(">> {}: found {} times", phrase, count);
                 });

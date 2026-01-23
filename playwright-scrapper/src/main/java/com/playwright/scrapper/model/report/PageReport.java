@@ -5,5 +5,5 @@ import java.util.Map;
 
 public record PageReport(
         PerformanceInfo performanceInfo,
-        Map<String, Integer> searchPhrases) {
+        Map<String, Long> searchPhrases) {
 }

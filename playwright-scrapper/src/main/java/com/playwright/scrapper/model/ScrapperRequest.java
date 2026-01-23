@@ -1,3 +1,5 @@
 package com.playwright.scrapper.model;
 
-public record ScrapperRequest(String domain, String searchPhrase, Integer depth, boolean isTimeLoad) {}
+import java.util.List;
+
+public record ScrapperRequest(String domain, List<String> searchPhrases, Integer depth, boolean isTimeLoad) {}
