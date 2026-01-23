@@ -1,3 +1,3 @@
 package com.playwright.scrapper.model;
 
-public record ScrapperRequest(String domain, Integer depth, boolean isTimeLoad) {}
+public record ScrapperRequest(String domain, String searchPhrase, Integer depth, boolean isTimeLoad) {}

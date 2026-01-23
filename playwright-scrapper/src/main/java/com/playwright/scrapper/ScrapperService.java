@@ -46,7 +46,7 @@ class ScrapperService {
                     continue;
                 }
 
-                processPage(page, task.url(), task.depth(), request.domain(), visitedUrls, queue, allResults);
+                processPage(page, task.url(), task.depth(), request, visitedUrls, queue, allResults);
             }
 
             if (request.isTimeLoad()) {
@@ -76,7 +76,7 @@ class ScrapperService {
         }
     }
 
-    private void processPage(Page page, String url, int depth, String domain,
+    private void processPage(Page page, String url, int depth, ScrapperRequest req,
                              Set<String> visitedUrls, Queue<CrawlTask> queue,
                              Map<String, Map<String, Double>> results) {
 
@@ -90,6 +90,13 @@ class ScrapperService {
             Map<String, Double> metrics = PerformanceTracker.getPageMetrics(page);
             results.put(url, metrics);
 
+            String searchPhrase = req.searchPhrase();
+            if (searchPhrase != null && !searchPhrase.isEmpty()) {
+                if (page.getByText(searchPhrase).isVisible()) {
+                    LOGGER.info("Search phrase/word '{}' was found on current page", searchPhrase);
+                }
+            }
+
             List<Link> rawLinks = new ArrayList<>();
             page.getByRole(AriaRole.LINK).elementHandles().forEach(e -> {
                 try {
@@ -98,8 +105,8 @@ class ScrapperService {
             });
 
             Set<Link> finalLinks = scrapperUtil.aggregateInternalLinks(
-                    scrapperUtil.filterInternalLinks(new HashSet<>(rawLinks), domain),
-                    domain
+                    scrapperUtil.filterInternalLinks(new HashSet<>(rawLinks), req.domain()),
+                    req.domain()
             );
 
             for (Link nextLink : finalLinks) {
