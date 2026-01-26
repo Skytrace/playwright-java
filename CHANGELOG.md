@@ -1,3 +1,7 @@
+## [0.0.4] — 2026-01-26
+### Patch
+- change start method with returning report data
+
 ## [0.0.3] — 2026-01-26
 ### Patch
 - added build version on UI

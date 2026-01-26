@@ -21,10 +21,10 @@ class ScrapperService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScrapperService.class);
     private final ScrapperUtil scrapperUtil = new ScrapperUtil();
 
-    public void startCrawl(ScrapperRequest request) {
+    public Map<String, PageReport> startCrawl(ScrapperRequest request) {
         Set<String> visitedUrls = new HashSet<>();
         Queue<CrawlTask> queue = new LinkedList<>();
-        Map<String, PageReport> allResults = new HashMap<>();
+        Map<String, PageReport> finalReport = new HashMap<>();
 
         try (Playwright playwright = Playwright.create();
              Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
@@ -47,13 +47,13 @@ class ScrapperService {
                     continue;
                 }
 
-                processPage(page, task.url(), task.depth(), request, visitedUrls, queue, allResults);
+                processPage(page, task.url(), task.depth(), request, visitedUrls, queue, finalReport);
             }
 
             // isTimeLoad
             // then present the report by desc in Full Page Load order
             if (request.isTimeLoad()) {
-                Map<String, PageReport> sortedByDesc = allResults.entrySet().stream()
+                finalReport = finalReport.entrySet().stream()
                                 .sorted(Comparator.comparingDouble(e -> e.getValue().performanceInfo().fullPageLoad()))
                                         .collect(Collectors.toMap(
                                                 Map.Entry::getKey,
@@ -62,14 +62,17 @@ class ScrapperService {
                                                 LinkedHashMap::new
                                         )).reversed();
 
-                printFinalReport(sortedByDesc);
+                printFinalReport(finalReport);
             } else {
-                printFinalReport(allResults);
+                printFinalReport(finalReport);
             }
             LOGGER.info("Finished crawling domain: {}", request.domain());
 
         } catch (Exception e) {
             LOGGER.error("Scraper error for domain {}: {}", request.domain(), e.getMessage());
+        }
+         finally {
+            return finalReport;
         }
     }
 
