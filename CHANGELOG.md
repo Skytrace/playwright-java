@@ -1,3 +1,7 @@
+## [0.0.3] — 2026-01-26
+### Patch
+- added build version on UI
+
 ## [0.0.2] — 2026-01-26
 ### Patch
 - rename from ru to en

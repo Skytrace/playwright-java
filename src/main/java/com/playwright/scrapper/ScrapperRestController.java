@@ -1,9 +1,14 @@
 package com.playwright.scrapper;
 
 import com.playwright.scrapper.model.ScrapperRequest;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @RestController
 public class ScrapperRestController {
@@ -23,4 +28,12 @@ public class ScrapperRestController {
         return "Scraping process started for domain: " + request.domain() + ". Check console for results.";
     }
 
+    @GetMapping("/version")
+    public String getVersion() {
+        try {
+            return Files.readString(Paths.get("VERSION")).trim();
+        } catch (IOException e) {
+            return "unknown";
+        }
+    }
 }

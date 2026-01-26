@@ -118,6 +118,13 @@
                     </div>
                 </div>
             </div>
+
+            <footer class="mt-10 flex flex-col items-center space-y-2">
+                <div class="h-px w-8 bg-slate-100"></div>
+                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-[0.25em]">
+                    Build Version: <span id="appVersion" class="text-indigo-500 font-bold animate-pulse">loading...</span>
+                </p>
+            </footer>
         </div>
 
         <script>
@@ -128,8 +135,22 @@
             const phraseInput = document.getElementById('phraseInput');
             const tagsContainer = document.getElementById('tagsContainer');
             const tagsWrapper = document.getElementById('tagsWrapper');
+            const appVersionEl = document.getElementById('appVersion');
 
             let phrasesArray = [];
+
+            async function fetchVersion() {
+                try {
+                    const response = await fetch('/version');
+                    if (response.ok) {
+                        const version = await response.text();
+                        appVersionEl.innerText = version.trim();
+                        appVersionEl.classList.remove('animate-pulse');
+                    }
+                } catch (error) {
+                    appVersionEl.innerText = '0.0.0';
+                }
+            }
 
             function renderTags() {
                 tagsContainer.innerHTML = '';
@@ -222,6 +243,10 @@
                     terminal.scrollTop = terminal.scrollHeight;
                 }
             };
+
+            window.onload = () => {
+                fetchVersion();
+            }
         </script>
     </body>
 </html>
