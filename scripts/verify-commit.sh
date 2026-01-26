@@ -14,11 +14,11 @@ fi
 
 # Проверка на наличие тега
 if [[ ! $COMMIT_MSG =~ $REGEXP ]]; then
-    echo -e "\n\033[0;31m[ОШИБКА] Коммит отклонен!\033[0m"
-    echo -e "Сообщение должно содержать один из тегов: \033[0;32m[major]\033[0m, \033[0;32m[minor]\033[0m или \033[0;32m[patch]\033[0m."
-    echo -e "Пример: git commit -m \"[patch] исправил баг в поиске\"\n"
+    echo -e "\n\033[0;31m[Error] commit rejected!\033[0m"
+    echo -e "The commit must have once of tag: \033[0;32m[major]\033[0m, \033[0;32m[minor]\033[0m or \033[0;32m[patch]\033[0m."
+    echo -e "Example: git commit -m \"[patch] fix bug in search\"\n"
     exit 1
 fi
 
-echo -e "\033[0;32m[OK]\033[0m Тег версии найден."
+echo -e "\033[0;32m[OK]\033[0m Version tag is found."
 exit 0
