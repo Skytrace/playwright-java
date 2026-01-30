@@ -1,3 +1,7 @@
+## [0.1.0] — 2026-01-30
+### Minor Update
+- added seo information on engine side
+
 ## [0.0.4] — 2026-01-26
 ### Patch
 - change start method with returning report data

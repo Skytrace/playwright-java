@@ -5,8 +5,7 @@ import com.microsoft.playwright.options.AriaRole;
 import com.playwright.scrapper.model.CrawlTask;
 import com.playwright.scrapper.model.Link;
 import com.playwright.scrapper.model.ScrapperRequest;
-import com.playwright.scrapper.model.report.PageReport;
-import com.playwright.scrapper.model.report.PerformanceInfo;
+import com.playwright.scrapper.model.report.*;
 import com.playwright.scrapper.util.PerformanceTracker;
 import com.playwright.scrapper.util.ScrapperUtil;
 import org.slf4j.Logger;
@@ -84,7 +83,7 @@ class ScrapperService {
         visitedUrls.add(url);
 
         try {
-            page.navigate(url);
+            page.navigate(url, new Page.NavigateOptions().setTimeout(120000));
             page.waitForLoadState();
 
             // prepare page performance
@@ -102,8 +101,32 @@ class ScrapperService {
                 }
             });
 
+
+            // SEO Info block
+            //  req.isRequestSeo()
+            SeoInfo seoInfo;
+            String pageTitle = page.title();
+
+            List<Image> images = page.getByRole(AriaRole.IMG).all().stream()
+                    .filter(e -> e.isVisible())
+                    .map(img -> new Image(img.getAttribute("src"), img.getAttribute("alt")))
+                    .toList();
+
+            List<String> metasKeywords = getMetaInfo("keywords", page);
+            List<String> metasDescription = getMetaInfo("description", page);
+            List<ParagraphHeaders> paragraphHeaders = page.locator("h1, h2, h3, h4, h5, h6").all().stream()
+                    .map(header -> new ParagraphHeaders(
+                                    header.evaluate("el => el.tagName").toString(),
+                                    header.textContent()
+                    ))
+                    .toList();
+
+            seoInfo = new SeoInfo(pageTitle, paragraphHeaders, metasKeywords, metasDescription);
+            LOGGER.info("Search SEO info");
+
+
             // save page statistics
-            results.put(url, new PageReport(performanceInfo, foundPhrasesReport));
+            results.put(url, new PageReport(performanceInfo, foundPhrasesReport, seoInfo));
 
             List<Link> rawLinks = new ArrayList<>();
             page.getByRole(AriaRole.LINK).elementHandles().forEach(e -> {
@@ -125,6 +148,15 @@ class ScrapperService {
         } catch (Exception e) {
             LOGGER.error("Error processing page {}: {}", url, e.getMessage());
         }
+    }
+
+    private List<String> getMetaInfo(String meta, Page page) {
+        return Arrays.stream(page.locator("head > meta").all().stream()
+                        .filter(e -> meta.equals(e.getAttribute("name")))
+                        .map(e -> e.getAttribute("content"))
+                        .findFirst().get()
+                        .split(","))
+                .toList();
     }
 
     private void printFinalReport(Map<String, PageReport> results) {
@@ -149,6 +181,23 @@ class ScrapperService {
                 phrases.forEach((phrase, count) -> {
                     LOGGER.info(">> {}: found {} times", phrase, count);
                 });
+
+                if (metrics.seoInfo() != null) {
+                    LOGGER.info(">> *****           SEO Info Report          *****");
+                    LOGGER.info(">> Title: {}", metrics.seoInfo().title());
+
+                    metrics.seoInfo().paragraphHeaders().stream().forEach(header -> {
+                        LOGGER.info(">> tag: {}, value: {}", header.header(), header.value());
+                    });
+
+                    metrics.seoInfo().metasDescription().stream().forEach(meta -> {
+                        LOGGER.info(">> meta: description: {}", meta.toString());
+                    });
+
+                    metrics.seoInfo().metasKeywords().stream().forEach(meta -> {
+                        LOGGER.info(">> meta: keywords: {}", meta.toString());
+                    });
+                }
             }
             LOGGER.info("====================================================================");
         });
