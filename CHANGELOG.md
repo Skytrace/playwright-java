@@ -1,3 +1,7 @@
+## [0.2.0] — 2026-02-02
+### Minor Update
+- - added ability to choose seo info on UI; - added audit result on UI
+
 ## [0.1.0] — 2026-01-30
 ### Minor Update
 - added seo information on engine side

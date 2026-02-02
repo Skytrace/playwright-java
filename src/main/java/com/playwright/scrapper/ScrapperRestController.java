@@ -28,6 +28,7 @@ public class ScrapperRestController {
         }
         try {
             Map<String, PageReport> report = scraperService.startCrawl(request);
+
             return ResponseEntity.ok(report);
 
         } catch (Exception e) {

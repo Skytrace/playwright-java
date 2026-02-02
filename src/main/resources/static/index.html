@@ -1,252 +1,472 @@
 <!DOCTYPE html>
 <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Web Scraper Pro</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-            body { font-family: 'Inter', sans-serif; }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrapper Pro | SEO & Performance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-            .terminal-container {
-                background-color: #0f172a;
-                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            }
+        /* Кастомный скроллбар */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: #1e293b;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #475569;
-                border-radius: 10px;
-            }
+        .terminal-bg { background-color: #0f172a; }
 
-            .toggle-checkbox:checked {
-                right: 0;
-                border-color: #6366f1;
-            }
-            .toggle-checkbox:checked + .toggle-label {
-                background-color: #6366f1;
-            }
+        /* Анимации */
+        .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-            /* Стиль для фокуса контейнера тегов */
-            .tags-focused {
-                ring: 2px;
-                ring-color: rgba(99, 102, 241, 0.2);
-                border-color: #6366f1;
-            }
-        </style>
-    </head>
-    <body class="bg-[#f8fafc] text-slate-900 min-h-screen flex flex-col items-center justify-center p-6">
+        .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 
-        <div class="w-full max-w-lg bg-white shadow-xl rounded-2xl p-8 border border-slate-100">
-            <header class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-50 rounded-xl mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+        /* Стили для бейджей и тегов */
+        .seo-tag {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 2px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .hit-badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e0e7ff;
+            transition: all 0.2s;
+        }
+        .hit-badge:hover { border-color: #4f46e5; transform: translateY(-1px); }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- ЛЕВАЯ КОЛОНКА: УПРАВЛЕНИЕ И ЛОГИ -->
+        <div class="lg:col-span-5 space-y-6">
+            <header class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                <div class="flex items-center space-x-4 mb-8">
+                    <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-extrabold tracking-tight">Scrapper</h1>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">SEO & Performance Engine</p>
+                    </div>
                 </div>
-                <h1 class="text-2xl font-bold tracking-tight text-slate-800">Scrapper 2.0</h1>
-                <p class="text-slate-500 text-sm mt-1">Getting website performance and additional info</p>
+
+                <form id="scrapperForm" class="space-y-5">
+                    <!-- Домен -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Domain</label>
+                        <input type="text" id="domain" required placeholder="example.com"
+                               class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+
+                    <!-- Поисковые фразы -->
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center px-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search Phrases</label>
+                            <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter">Enter to add</span>
+                        </div>
+                        <div id="tagsWrapper" class="flex flex-wrap gap-2 p-3 min-h-[100px] bg-slate-50 border border-slate-200 rounded-2xl text-sm cursor-text focus-within:border-indigo-500 transition-colors">
+                            <div id="tagsContainer" class="flex flex-wrap gap-2 contents"></div>
+                            <input type="text" id="phraseInput" placeholder="Keywords..." class="flex-1 min-w-[80px] outline-none bg-transparent py-1">
+                        </div>
+                    </div>
+
+                    <!-- Настройки -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Depth</label>
+                            <input type="number" id="depth" value="1" min="0" max="10"
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm outline-none focus:border-indigo-500 transition-all">
+                            <p class="text-[11px] text-slate-400 italic mt-1 ml-1">0 — only main page (single page)</p>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between bg-slate-50 rounded-2xl border border-slate-200 px-4 h-[48px]">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Sort Load</span>
+                                <label class="relative inline-block w-8 h-4">
+                                    <input type="checkbox" id="timeLoad" class="sr-only peer">
+                                    <div class="w-8 h-4 bg-slate-300 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:bg-white after:rounded-full after:h-3 after:w-3 after:top-0.5 after:left-0.5 after:transition-all peer-checked:after:translate-x-4 relative"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between bg-slate-50 rounded-2xl border border-slate-200 px-4 h-[48px]">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Get SEO Info</span>
+                                <label class="relative inline-block w-8 h-4">
+                                    <input type="checkbox" id="seo" class="sr-only peer">
+                                    <div class="w-8 h-4 bg-slate-300 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:bg-white after:rounded-full after:h-3 after:w-3 after:top-0.5 after:left-0.5 after:transition-all peer-checked:after:translate-x-4 relative"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-[0.98]">
+                        START AUDIT
+                    </button>
+                </form>
             </header>
 
-            <form id="scraperForm" class="space-y-5">
-                <div class="space-y-1.5">
-                    <label for="domain" class="block text-sm font-semibold text-slate-700">Domain</label>
-                    <input type="text" id="domain" name="domain" required placeholder="example.com"
-                           class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-sm">
-                </div>
-
-                <div class="space-y-1.5">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-sm font-semibold text-slate-700">Search phrases</label>
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Push 'enter' for adding</span>
-                    </div>
-
-                    <div id="tagsWrapper" class="flex flex-wrap gap-2 p-2 min-h-[100px] bg-white border border-slate-200 rounded-xl transition-all duration-200 text-sm cursor-text focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500">
-                        <div id="tagsContainer" class="flex flex-wrap gap-2 contents">
-                        </div>
-                        <input type="text" id="phraseInput" placeholder="Enter search words/phrases..."
-                               class="flex-1 min-w-[120px] outline-none bg-transparent py-1 px-2 text-sm">
+            <!-- Терминал логов -->
+            <div id="statusArea" class="hidden space-y-3">
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Execution Logs</span>
+                    <div class="flex items-center space-x-1.5">
+                        <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">Engine Live</span>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div class="space-y-1.5">
-                        <label for="depth" class="block text-sm font-semibold text-slate-700">Deep</label>
-                        <input type="number" id="depth" name="depth" required min="0" max="100" placeholder="3"
-                               class="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-sm">
-                        <p class="text-[11px] text-slate-400 italic">0 — only main page (single page)</p>
-                    </div>
-
-                    <div class="space-y-1.5">
-                        <label class="block text-sm font-semibold text-slate-700">Enter options</label>
-                        <div class="flex items-center h-[46px] bg-slate-50 px-3 rounded-xl border border-slate-100">
-                            <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="timeLoad" id="timeLoad" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-2 border-slate-200 appearance-none cursor-pointer transition-all duration-300 right-5"/>
-                                <label for="timeLoad" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-200 cursor-pointer transition-all duration-300"></label>
-                            </div>
-                            <span class="ml-2 text-[10px] leading-tight text-slate-500 font-bold">Time Load DESC</span>
-                        </div>
-                    </div>
+                <div class="terminal-bg rounded-3xl p-6 h-48 overflow-y-auto mono text-[10px] text-indigo-300 custom-scrollbar border border-slate-800 shadow-2xl">
+                    <div id="terminal"></div>
                 </div>
+            </div>
+        </div>
 
-                <button type="submit" id="submitBtn"
-                        class="w-full bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-500/30 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-indigo-100">
-                    Start scrapper
-                </button>
-            </form>
-
-            <div id="statusArea" class="mt-8 hidden space-y-3">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Execution logs</h2>
-                    <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+        <!-- ПРАВАЯ КОЛОНКА: ОТЧЕТ -->
+        <div id="reportArea" class="lg:col-span-7 hidden animate-fade-up space-y-6">
+            <!-- Статистика -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pages</span>
+                    <p id="statPages" class="text-3xl font-black text-slate-900 mt-1">0</p>
                 </div>
-
-                <div class="terminal-container rounded-xl overflow-hidden border border-slate-800">
-                    <div class="bg-slate-800/50 px-4 py-2 flex items-center space-x-1.5 border-b border-slate-800">
-                        <div class="w-2 h-2 rounded-full bg-red-500/80"></div>
-                        <div class="w-2 h-2 rounded-full bg-amber-500/80"></div>
-                        <div class="w-2 h-2 rounded-full bg-emerald-500/80"></div>
-                    </div>
-                    <div id="terminal" class="p-5 h-48 overflow-y-auto text-xs font-mono custom-scrollbar leading-relaxed">
-                        <p class="text-slate-500">> Please type...</p>
-                    </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-indigo-500">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg Load</span>
+                    <p id="statAvgLoad" class="text-3xl font-black text-indigo-600 mt-1">0<span class="text-xs">ms</span></p>
                 </div>
             </div>
 
-            <footer class="mt-10 flex flex-col items-center space-y-2">
-                <div class="h-px w-8 bg-slate-100"></div>
-                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-[0.25em]">
-                    Build Version: <span id="appVersion" class="text-indigo-500 font-bold animate-pulse">loading...</span>
-                </p>
-            </footer>
+            <!-- Таблица документов -->
+            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Scanned Documents</h3>
+                    <span class="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md uppercase tracking-tighter">Trace Completed</span>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                        <tr>
+                            <th class="px-6 py-4">Title / URL</th>
+                            <th class="px-4 py-4">Load (ms)</th>
+                            <th class="px-4 py-4 text-center">Hits</th>
+                            <th class="px-6 py-4 text-right">Audit</th>
+                        </tr>
+                        </thead>
+                        <tbody id="reportTableBody" class="divide-y divide-slate-50 text-sm font-medium">
+                        <!-- JS Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <script>
-            const form = document.getElementById('scraperForm');
-            const terminal = document.getElementById('terminal');
-            const statusArea = document.getElementById('statusArea');
-            const submitBtn = document.getElementById('submitBtn');
-            const phraseInput = document.getElementById('phraseInput');
-            const tagsContainer = document.getElementById('tagsContainer');
-            const tagsWrapper = document.getElementById('tagsWrapper');
-            const appVersionEl = document.getElementById('appVersion');
+    <!-- FOOTER -->
+    <footer class="text-center py-8 space-y-2">
+        <div class="h-px w-12 bg-slate-200 mx-auto mb-4"></div>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
+            Build Version: <span id="appVersion" class="text-indigo-500 font-bold">...</span>
+        </p>
+    </footer>
+</div>
 
-            let phrasesArray = [];
+<!-- SEO MODAL -->
+<div id="seoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
+        <div class="p-8 border-b border-slate-50 flex justify-between items-start bg-slate-50/30">
+            <div>
+                <h2 id="modalTitle" class="text-2xl font-extrabold text-slate-900 tracking-tight">Audit Insight</h2>
+                <p id="modalUrl" class="text-[10px] font-mono text-indigo-500 mt-1 uppercase tracking-widest">https://...</p>
+            </div>
+            <button onclick="closeModal()" class="p-3 bg-white shadow-sm rounded-2xl hover:bg-slate-50 transition-all active:scale-90">
+                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-8">
 
-            async function fetchVersion() {
-                try {
-                    const response = await fetch('/version');
-                    if (response.ok) {
-                        const version = await response.text();
-                        appVersionEl.innerText = version.trim();
-                        appVersionEl.classList.remove('animate-pulse');
-                    }
-                } catch (error) {
-                    appVersionEl.innerText = '0.0.0';
-                }
+            <!-- NEW SECTION: Search Phrases (Hits) -->
+            <section>
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                    <svg class="w-3 h-3 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Search Phrases (Hits)
+                </h4>
+                <div id="modalSearchPhrases" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Phrases with hit counts injected here -->
+                </div>
+            </section>
+
+            <section>
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                    <svg class="w-3 h-3 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h8m-8 6h16"/></svg>
+                    HTML Headings (H1/H6)
+                </h4>
+                <div id="modalHeadings" class="space-y-2"></div>
+            </section>
+
+            <section>
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                    <svg class="w-3 h-3 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Meta Description
+                </h4>
+                <p id="modalDescription" class="text-sm text-slate-600 leading-relaxed italic bg-slate-50 p-4 rounded-2xl border border-slate-100"></p>
+            </section>
+
+            <section>
+                <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
+                    <svg class="w-3 h-3 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    Meta Keywords
+                </h4>
+                <div id="modalKeywords" class="flex flex-wrap gap-1"></div>
+            </section>
+
+            <section class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100">
+                <h4 class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-4">Precision Telemetry</h4>
+                <div id="modalPerfGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    const scrapperForm = document.getElementById('scrapperForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const terminal = document.getElementById('terminal');
+    const statusArea = document.getElementById('statusArea');
+    const reportArea = document.getElementById('reportArea');
+    const phraseInput = document.getElementById('phraseInput');
+    const tagsContainer = document.getElementById('tagsContainer');
+    const tagsWrapper = document.getElementById('tagsWrapper');
+    const reportTableBody = document.getElementById('reportTableBody');
+    const appVersionEl = document.getElementById('appVersion');
+
+    let phrasesArray = [];
+    let globalResults = null;
+
+    /** Получение версии приложения */
+    async function fetchVersion() {
+        try {
+            const response = await fetch('/version');
+            if (response.ok) {
+                const version = await response.text();
+                appVersionEl.innerText = version.trim();
             }
+        } catch (error) { appVersionEl.innerText = '2.1.0'; }
+    }
 
-            function renderTags() {
-                tagsContainer.innerHTML = '';
-                phrasesArray.forEach((phrase, index) => {
-                    const tag = document.createElement('div');
-                    tag.className = 'flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-100 group animate-in fade-in zoom-in duration-200';
-                    tag.innerHTML = `
-                        <span class="font-medium">${phrase}</span>
-                        <button type="button" onclick="removeTag(${index})" class="text-indigo-400 hover:text-indigo-600 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    `;
-                    tagsContainer.appendChild(tag);
-                });
-            }
+    /** Управление тегами ключевых слов */
+    function renderTags() {
+        tagsContainer.innerHTML = '';
+        phrasesArray.forEach((phrase, index) => {
+            const tag = document.createElement('div');
+            tag.className = 'flex items-center gap-1.5 bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl border border-indigo-100 text-xs font-bold animate-in zoom-in duration-200';
+            tag.innerHTML = `${phrase}<button type="button" onclick="removeTag(${index})" class="text-indigo-300 hover:text-indigo-600 font-black ml-1">×</button>`;
+            tagsContainer.appendChild(tag);
+        });
+    }
+    window.removeTag = (i) => { phrasesArray.splice(i, 1); renderTags(); };
 
-            function addTag(text) {
-                const phrase = text.trim();
-                if (phrase && !phrasesArray.includes(phrase)) {
-                    phrasesArray.push(phrase);
-                    renderTags();
-                }
-                phraseInput.value = '';
-            }
+    // Исправленный обработчик нажатия клавиш
+    phraseInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Остановить отправку всей формы
+            addTag(phraseInput.value);
+        } else if (e.key === 'Backspace' && phraseInput.value === '' && phrasesArray.length > 0) {
+            phrasesArray.pop();
+            renderTags();
+        }
+    });
 
-            window.removeTag = (index) => {
-                phrasesArray.splice(index, 1);
-                renderTags();
-            };
+    function addTag(v) {
+        if(v.trim() && !phrasesArray.includes(v.trim())) {
+            phrasesArray.push(v.trim());
+            renderTags();
+        }
+        phraseInput.value = '';
+    }
 
-            phraseInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag(phraseInput.value);
-                } else if (e.key === 'Backspace' && phraseInput.value === '' && phrasesArray.length > 0) {
-                    phrasesArray.pop();
-                    renderTags();
-                }
+    tagsWrapper.onclick = () => phraseInput.focus();
+
+    /** Логирование в терминал */
+    function pushLog(msg, color = 'text-indigo-300') {
+        const line = document.createElement('p');
+        line.className = `${color} mb-1`;
+        line.innerHTML = `<span class="opacity-40 text-slate-500 mr-2">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
+        terminal.appendChild(line);
+        terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
+    }
+
+    /** Отрисовка таблицы результатов */
+    function displayResults(data) {
+        globalResults = data;
+        const urls = Object.keys(data);
+        if (urls.length === 0) return;
+
+        let sumLoad = 0;
+        reportTableBody.innerHTML = '';
+
+        urls.forEach(url => {
+            const item = data[url];
+            const hits = Object.values(item.searchPhrases || {}).reduce((a, b) => a + b, 0);
+            sumLoad += item.performanceInfo.fullPageLoad;
+
+            const row = document.createElement('tr');
+            row.className = "group hover:bg-slate-50/50 transition-all cursor-default";
+            row.innerHTML = `
+                <td class="px-6 py-5">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-800 text-xs truncate max-w-[180px]">${item.seoInfo?.title || 'Untitled'}</span>
+                        <span class="text-[9px] font-mono text-indigo-400 mt-0.5 truncate max-w-[220px] uppercase tracking-tighter" title="${url}">${url}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-5">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-600 text-xs">${Math.round(item.performanceInfo.fullPageLoad)}ms</span>
+                        <div class="w-16 h-1 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                            <div class="h-full bg-indigo-500 rounded-full" style="width: ${Math.min(100, item.performanceInfo.fullPageLoad / 40)}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-4 py-5 text-center">
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-bold">${hits}</span>
+                </td>
+                <td class="px-6 py-5 text-right">
+                    <button onclick="openModal('${url}')" class="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-bold hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                        AUDIT
+                    </button>
+                </td>
+            `;
+            reportTableBody.appendChild(row);
+        });
+
+        document.getElementById('statPages').innerText = urls.length;
+        document.getElementById('statAvgLoad').innerText = Math.round(sumLoad / urls.length);
+        reportArea.classList.remove('hidden');
+    }
+
+    /** Открытие модального окна AUDIT */
+    window.openModal = (url) => {
+        const item = globalResults[url];
+        if (!item) return;
+
+        document.getElementById('modalTitle').innerText = item.seoInfo?.title || 'Audit Insight';
+        document.getElementById('modalUrl').innerText = url;
+        document.getElementById('modalDescription').innerText = (item.seoInfo?.metasDescription && item.seoInfo.metasDescription.length > 0)
+            ? item.seoInfo.metasDescription.join(', ')
+            : 'Описание отсутствует.';
+
+        // Search Phrases (Hits) Section
+        const pCont = document.getElementById('modalSearchPhrases');
+        const phrases = item.searchPhrases || {};
+        const phraseKeys = Object.keys(phrases);
+
+        if (phraseKeys.length > 0) {
+            pCont.innerHTML = phraseKeys.map(key => `
+                <div class="hit-badge">
+                    <span class="truncate pr-2">${key}</span>
+                    <span class="bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-md leading-none">${phrases[key]}</span>
+                </div>
+            `).join('');
+        } else {
+            pCont.innerHTML = '<p class="text-[11px] text-slate-400 italic col-span-full">Фразы не найдены.</p>';
+        }
+
+        // Headings
+        const hCont = document.getElementById('modalHeadings');
+        hCont.innerHTML = (item.seoInfo?.paragraphHeaders || []).map(h =>
+            `<div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                <span class="bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-lg font-bold">${h.header}</span>
+                <span class="text-slate-700 font-semibold text-xs truncate" title="${h.value}">${h.value}</span>
+            </div>`
+        ).join('') || '<p class="text-xs text-slate-400 px-1">Заголовки не обнаружены.</p>';
+
+        // Meta Keywords
+        document.getElementById('modalKeywords').innerHTML = (item.seoInfo?.metasKeywords || []).map(k =>
+            `<span class="seo-tag">${k}</span>`
+        ).join('') || '<span class="text-xs text-slate-400 px-1">Ключевые слова не найдены.</span>';
+
+        // Performance Grid
+        const p = item.performanceInfo;
+        const metrics = [
+            {l: 'TTFB', v: Math.round(p.timeToFirstByte || 0)},
+            {l: 'DNS', v: Math.round(p.dnsLookUp || 0)},
+            {l: 'DOM', v: Math.round(p.domContentLoad || 0)},
+            {l: 'TCP', v: Math.round(p.tcpConnection || 0)}
+        ];
+        document.getElementById('modalPerfGrid').innerHTML = metrics.map(m =>
+            `<div><p class="text-[8px] font-bold text-indigo-400 uppercase tracking-tighter">${m.l}</p><p class="text-xs font-black text-indigo-900">${m.v}ms</p></div>`
+        ).join('');
+
+        document.getElementById('seoModal').classList.remove('hidden');
+    };
+
+    window.closeModal = () => document.getElementById('seoModal').classList.add('hidden');
+
+    /** Обработка формы */
+    scrapperForm.onsubmit = async (e) => {
+        e.preventDefault();
+        // Если в поле ввода остался текст, добавляем его как тег перед отправкой
+        if (phraseInput.value.trim()) addTag(phraseInput.value);
+
+        const domainValue = document.getElementById('domain').value;
+        const payload = {
+            domain: domainValue,
+            searchPhrases: phrasesArray,
+            depth: parseInt(document.getElementById('depth').value) || 0,
+            isTimeLoad: document.getElementById('timeLoad').checked,
+            isSeo: document.getElementById('seo').checked
+        };
+
+        statusArea.classList.remove('hidden');
+        reportArea.classList.add('hidden');
+        terminal.innerHTML = '';
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading-pulse');
+        submitBtn.innerText = 'PROCESSING...';
+
+        pushLog(`Scanner initialization: ${domainValue}...`, 'text-blue-400');
+        pushLog(`Configuration: ${JSON.stringify(payload)}`, 'text-slate-500');
+
+        try {
+            const response = await fetch('/api/scrapper/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
 
-            tagsWrapper.addEventListener('click', () => {
-                phraseInput.focus();
-            });
-
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-
-                if (phraseInput.value.trim()) {
-                    addTag(phraseInput.value);
-                }
-
-                const domainValue = document.getElementById('domain').value;
-                const depthValue = parseInt(document.getElementById('depth').value) || 0;
-                const isTimeLoadValue = document.getElementById('timeLoad').checked;
-
-                const payload = {
-                    domain: domainValue,
-                    searchPhrases: phrasesArray,
-                    depth: depthValue,
-                    isTimeLoad: isTimeLoadValue
-                };
-
-                statusArea.classList.remove('hidden');
-                terminal.innerHTML = `<p class="text-indigo-400">> [${new Date().toLocaleTimeString()}] Scanning initialization...</p>`;
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50');
-
-                try {
-                    const response = await fetch('/api/scrapper/start', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const message = await response.text();
-                    terminal.innerHTML += `<p class="text-slate-500 mt-2">> Request Payload: <span class="text-slate-300 font-mono text-[10px]">${JSON.stringify(payload)}</span></p>`;
-
-                    if (response.ok) {
-                        terminal.innerHTML += `<p class="text-emerald-400 font-bold mt-1">> Success: ${message}</p>`;
-                    } else {
-                        terminal.innerHTML += `<p class="text-red-400 font-bold mt-1">> Error ${response.status}: ${message}</p>`;
-                    }
-                } catch (error) {
-                    terminal.innerHTML += `<p class="text-red-500 font-bold mt-1">> Network error: ${error.message}</p>`;
-                } finally {
-                    submitBtn.disabled = false;
-                    submitBtn.classList.remove('opacity-50');
-                    terminal.scrollTop = terminal.scrollHeight;
-                }
-            };
-
-            window.onload = () => {
-                fetchVersion();
+            if (response.ok) {
+                const data = await response.json();
+                pushLog(`Success! You have data for ${Object.keys(data).length} pages.`, 'text-emerald-400 font-bold');
+                displayResults(data);
+            } else {
+                const err = await response.text();
+                pushLog(`Server error: ${response.status}: ${err}`, 'text-red-400');
             }
-        </script>
-    </body>
+        } catch (err) {
+            pushLog(`Network error: ${err.message}`, 'text-red-500');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading-pulse');
+            submitBtn.innerText = 'START AUDIT';
+        }
+    };
+
+    window.onload = fetchVersion;
+</script>
+</body>
 </html>

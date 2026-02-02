@@ -102,28 +102,29 @@ class ScrapperService {
             });
 
 
-            // SEO Info block
-            //  req.isRequestSeo()
-            SeoInfo seoInfo;
-            String pageTitle = page.title();
+            SeoInfo seoInfo = null;
+            if (req.isSeo()) {
+                LOGGER.info("Search SEO info");
 
-            List<Image> images = page.getByRole(AriaRole.IMG).all().stream()
-                    .filter(e -> e.isVisible())
-                    .map(img -> new Image(img.getAttribute("src"), img.getAttribute("alt")))
-                    .toList();
+                String pageTitle = page.title();
 
-            List<String> metasKeywords = getMetaInfo("keywords", page);
-            List<String> metasDescription = getMetaInfo("description", page);
-            List<ParagraphHeaders> paragraphHeaders = page.locator("h1, h2, h3, h4, h5, h6").all().stream()
-                    .map(header -> new ParagraphHeaders(
-                                    header.evaluate("el => el.tagName").toString(),
-                                    header.textContent()
-                    ))
-                    .toList();
+                List<Image> images = page.getByRole(AriaRole.IMG).all().stream()
+                        .filter(e -> e.isVisible())
+                        .map(img -> new Image(img.getAttribute("src"), img.getAttribute("alt")))
+                        .toList();
 
-            seoInfo = new SeoInfo(pageTitle, paragraphHeaders, metasKeywords, metasDescription);
-            LOGGER.info("Search SEO info");
+                List<String> metasKeywords = getMetaInfo("keywords", page);
+                List<String> metasDescription = getMetaInfo("description", page);
+                List<ParagraphHeaders> paragraphHeaders = page.locator("h1, h2, h3, h4, h5, h6").all().stream()
+                        .map(header -> new ParagraphHeaders(
+                                header.evaluate("el => el.tagName").toString(),
+                                header.textContent()
+                        ))
+                        .toList();
 
+                seoInfo = new SeoInfo(pageTitle, paragraphHeaders, metasKeywords, metasDescription);
+                LOGGER.info("Analyzing SEO info from page '{}' completed");
+            }
 
             // save page statistics
             results.put(url, new PageReport(performanceInfo, foundPhrasesReport, seoInfo));
