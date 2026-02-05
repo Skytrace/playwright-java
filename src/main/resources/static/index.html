@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,21 +10,18 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Кастомный скроллбар */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
         .terminal-bg { background-color: #0f172a; }
 
-        /* Анимации */
         .animate-fade-up { animation: fadeUp 0.5s ease-out forwards; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .loading-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 
-        /* Стили для бейджей и тегов */
         .seo-tag {
             background: #f1f5f9;
             color: #475569;
@@ -58,7 +55,6 @@
 <div class="max-w-7xl mx-auto space-y-8">
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- ЛЕВАЯ КОЛОНКА: УПРАВЛЕНИЕ И ЛОГИ -->
         <div class="lg:col-span-5 space-y-6">
             <header class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
                 <div class="flex items-center space-x-4 mb-8">
@@ -72,14 +68,12 @@
                 </div>
 
                 <form id="scrapperForm" class="space-y-5">
-                    <!-- Домен -->
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Domain</label>
                         <input type="text" id="domain" required placeholder="example.com"
                                class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all">
                     </div>
 
-                    <!-- Поисковые фразы -->
                     <div class="space-y-1.5">
                         <div class="flex justify-between items-center px-1">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Search Phrases</label>
@@ -91,7 +85,6 @@
                         </div>
                     </div>
 
-                    <!-- Настройки -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Depth</label>
@@ -123,7 +116,6 @@
                 </form>
             </header>
 
-            <!-- Терминал логов -->
             <div id="statusArea" class="hidden space-y-3">
                 <div class="flex items-center justify-between px-2">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Execution Logs</span>
@@ -138,9 +130,7 @@
             </div>
         </div>
 
-        <!-- ПРАВАЯ КОЛОНКА: ОТЧЕТ -->
         <div id="reportArea" class="lg:col-span-7 hidden animate-fade-up space-y-6">
-            <!-- Статистика -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pages</span>
@@ -152,7 +142,6 @@
                 </div>
             </div>
 
-            <!-- Таблица документов -->
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col">
                 <div class="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Scanned Documents</h3>
@@ -169,7 +158,6 @@
                         </tr>
                         </thead>
                         <tbody id="reportTableBody" class="divide-y divide-slate-50 text-sm font-medium">
-                        <!-- JS Injected -->
                         </tbody>
                     </table>
                 </div>
@@ -177,7 +165,6 @@
         </div>
     </div>
 
-    <!-- FOOTER -->
     <footer class="text-center py-8 space-y-2">
         <div class="h-px w-12 bg-slate-200 mx-auto mb-4"></div>
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">
@@ -186,7 +173,6 @@
     </footer>
 </div>
 
-<!-- SEO MODAL -->
 <div id="seoModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
         <div class="p-8 border-b border-slate-50 flex justify-between items-start bg-slate-50/30">
@@ -200,7 +186,6 @@
         </div>
         <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar space-y-8">
 
-            <!-- NEW SECTION: Search Phrases (Hits) -->
             <section>
                 <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center">
                     <svg class="w-3 h-3 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -258,7 +243,6 @@
     let phrasesArray = [];
     let globalResults = null;
 
-    /** Получение версии приложения */
     async function fetchVersion() {
         try {
             const response = await fetch('/version');
@@ -269,7 +253,6 @@
         } catch (error) { appVersionEl.innerText = '2.1.0'; }
     }
 
-    /** Управление тегами ключевых слов */
     function renderTags() {
         tagsContainer.innerHTML = '';
         phrasesArray.forEach((phrase, index) => {
@@ -281,7 +264,6 @@
     }
     window.removeTag = (i) => { phrasesArray.splice(i, 1); renderTags(); };
 
-    // Исправленный обработчик нажатия клавиш
     phraseInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault(); // Остановить отправку всей формы
@@ -302,7 +284,6 @@
 
     tagsWrapper.onclick = () => phraseInput.focus();
 
-    /** Логирование в терминал */
     function pushLog(msg, color = 'text-indigo-300') {
         const line = document.createElement('p');
         line.className = `${color} mb-1`;
@@ -311,7 +292,6 @@
         terminal.parentElement.scrollTop = terminal.parentElement.scrollHeight;
     }
 
-    /** Отрисовка таблицы результатов */
     function displayResults(data) {
         globalResults = data;
         const urls = Object.keys(data);
@@ -359,7 +339,6 @@
         reportArea.classList.remove('hidden');
     }
 
-    /** Открытие модального окна AUDIT */
     window.openModal = (url) => {
         const item = globalResults[url];
         if (!item) return;
@@ -368,7 +347,7 @@
         document.getElementById('modalUrl').innerText = url;
         document.getElementById('modalDescription').innerText = (item.seoInfo?.metasDescription && item.seoInfo.metasDescription.length > 0)
             ? item.seoInfo.metasDescription.join(', ')
-            : 'Описание отсутствует.';
+            : 'No description.';
 
         // Search Phrases (Hits) Section
         const pCont = document.getElementById('modalSearchPhrases');
@@ -383,7 +362,7 @@
                 </div>
             `).join('');
         } else {
-            pCont.innerHTML = '<p class="text-[11px] text-slate-400 italic col-span-full">Фразы не найдены.</p>';
+            pCont.innerHTML = '<p class="text-[11px] text-slate-400 italic col-span-full">Phrases not found.</p>';
         }
 
         // Headings
@@ -393,12 +372,12 @@
                 <span class="bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-lg font-bold">${h.header}</span>
                 <span class="text-slate-700 font-semibold text-xs truncate" title="${h.value}">${h.value}</span>
             </div>`
-        ).join('') || '<p class="text-xs text-slate-400 px-1">Заголовки не обнаружены.</p>';
+        ).join('') || '<p class="text-xs text-slate-400 px-1">Paragraph headers(h1-h6) not found.</p>';
 
         // Meta Keywords
         document.getElementById('modalKeywords').innerHTML = (item.seoInfo?.metasKeywords || []).map(k =>
             `<span class="seo-tag">${k}</span>`
-        ).join('') || '<span class="text-xs text-slate-400 px-1">Ключевые слова не найдены.</span>';
+        ).join('') || '<span class="text-xs text-slate-400 px-1">Keywords not found.</span>';
 
         // Performance Grid
         const p = item.performanceInfo;
@@ -417,10 +396,8 @@
 
     window.closeModal = () => document.getElementById('seoModal').classList.add('hidden');
 
-    /** Обработка формы */
     scrapperForm.onsubmit = async (e) => {
         e.preventDefault();
-        // Если в поле ввода остался текст, добавляем его как тег перед отправкой
         if (phraseInput.value.trim()) addTag(phraseInput.value);
 
         const domainValue = document.getElementById('domain').value;

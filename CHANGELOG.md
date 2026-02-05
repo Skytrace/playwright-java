@@ -1,3 +1,7 @@
+## [0.3.1] — 2026-02-05
+### Patch
+- - remove ru description
+
 ## [0.3.0] — 2026-02-05
 ### Minor Update
 - 
