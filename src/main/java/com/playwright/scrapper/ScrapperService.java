@@ -34,6 +34,19 @@ class ScrapperService {
             LOGGER.info("Browser launched for domain: {}", request.domain());
 
             BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(null));
+
+            // blocking ad services
+            context.route("**/*", route -> {
+                String url = route.request().url().toLowerCase();
+                if (url.contains("google-analytics") || url.contains("doubleclick") ||
+                        url.contains("adservice") || url.contains("facebook.net") ||
+                        url.contains("adnxs") || url.contains("analytics")) {
+                    route.abort();
+                } else {
+                    route.resume();
+                }
+            });
+
             Page page = context.newPage();
 
             String startUrl = "https://" + request.domain();
@@ -83,7 +96,7 @@ class ScrapperService {
         visitedUrls.add(url);
 
         try {
-            page.navigate(url, new Page.NavigateOptions().setTimeout(120000));
+            page.navigate(url, new Page.NavigateOptions().setTimeout(240000));
             page.waitForLoadState();
 
             // prepare page performance
@@ -152,12 +165,21 @@ class ScrapperService {
     }
 
     private List<String> getMetaInfo(String meta, Page page) {
-        return Arrays.stream(page.locator("head > meta").all().stream()
-                        .filter(e -> meta.equals(e.getAttribute("name")))
-                        .map(e -> e.getAttribute("content"))
-                        .findFirst().get()
-                        .split(","))
-                .toList();
+        Locator metaLocator = page.locator("head > meta[name='" + meta + "']");
+
+        if (metaLocator.count() == 0) {
+            return Collections.emptyList();
+        }
+
+        String content = metaLocator.first().getAttribute("content");
+        if (content == null || content.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(content.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     private void printFinalReport(Map<String, PageReport> results) {
