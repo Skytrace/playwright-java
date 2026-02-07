@@ -77,7 +77,7 @@ public class ScrapperUtil {
         return links.stream()
                 .map(link -> {
                     if (link.link().startsWith("/")) {
-                        return new Link(link.text(), "https://" + domain + link.link()
+                        return new Link(link.text(), domain + link.link()
                         );
                     }
                     return link;

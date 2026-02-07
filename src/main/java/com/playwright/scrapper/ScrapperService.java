@@ -20,7 +20,7 @@ class ScrapperService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScrapperService.class);
     private final ScrapperUtil scrapperUtil = new ScrapperUtil();
 
-    public Map<String, PageReport> startCrawl(ScrapperRequest request) {
+    public Map<String, PageReport> startCrawl(ScrapperRequest scrapperRequest) {
         Set<String> visitedUrls = new HashSet<>();
         Queue<CrawlTask> queue = new LinkedList<>();
         Map<String, PageReport> finalReport = new HashMap<>();
@@ -31,7 +31,7 @@ class ScrapperService {
                      .setChannel("chrome")
                      .setArgs(Arrays.asList("--start-maximized")))) {
 
-            LOGGER.info("Browser launched for domain: {}", request.domain());
+            LOGGER.info("Browser launched for domain: {}", scrapperRequest.domain());
 
             BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(null));
 
@@ -49,7 +49,12 @@ class ScrapperService {
 
             Page page = context.newPage();
 
-            String startUrl = request.domain().trim();
+            String startUrl = scrapperRequest.domain().trim();
+
+            if (startUrl.endsWith("/")) {
+                startUrl = startUrl.substring(0, startUrl.length() - 1);
+            }
+
             boolean hasProtocol = startUrl.startsWith("http");
 
             if (!hasProtocol) {
@@ -61,16 +66,16 @@ class ScrapperService {
             while (!queue.isEmpty()) {
                 CrawlTask task = queue.poll();
 
-                if (task.depth() > request.depth() || visitedUrls.contains(task.url())) {
+                if (task.depth() > scrapperRequest.depth() || visitedUrls.contains(task.url())) {
                     continue;
                 }
 
-                processPage(page, task.url(), task.depth(), request, visitedUrls, queue, finalReport);
+                processPage(page, task.url(), task.depth(), scrapperRequest, startUrl, visitedUrls, queue, finalReport);
             }
 
             // isTimeLoad
             // then present the report by desc in Full Page Load order
-            if (request.isTimeLoad()) {
+            if (scrapperRequest.isTimeLoad()) {
                 finalReport = finalReport.entrySet().stream()
                                 .sorted(Comparator.comparingDouble(e -> e.getValue().performanceInfo().fullPageLoad()))
                                         .collect(Collectors.toMap(
@@ -84,17 +89,17 @@ class ScrapperService {
             } else {
                 printFinalReport(finalReport);
             }
-            LOGGER.info("Finished crawling domain: {}", request.domain());
+            LOGGER.info("Finished crawling domain: {}", scrapperRequest.domain());
 
         } catch (Exception e) {
-            LOGGER.error("Scraper error for domain {}: {}", request.domain(), e.getMessage());
+            LOGGER.error("Scraper error for domain {}: {}", scrapperRequest.domain(), e.getMessage());
         }
          finally {
             return finalReport;
         }
     }
 
-    private void processPage(Page page, String url, int depth, ScrapperRequest req,
+    private void processPage(Page page, String url, int depth, ScrapperRequest req, String startUrl,
                              Set<String> visitedUrls, Queue<CrawlTask> queue,
                              Map<String, PageReport> results) {
 
@@ -156,8 +161,8 @@ class ScrapperService {
             });
 
             Set<Link> finalLinks = scrapperUtil.aggregateInternalLinks(
-                    scrapperUtil.filterInternalLinks(new HashSet<>(rawLinks), req.domain()),
-                    req.domain()
+                    scrapperUtil.filterInternalLinks(new HashSet<>(rawLinks), startUrl),
+                    startUrl
             );
 
             for (Link nextLink : finalLinks) {
