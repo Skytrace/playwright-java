@@ -1,3 +1,7 @@
+## [1.0.1] — 2026-02-07
+### Patch
+- removed .idea folder. Fix .gitignore file
+
 ## [1.0.0] — 2026-02-07
 ### Major Update
 - the first version of WSPro. Added README file
