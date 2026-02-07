@@ -1,3 +1,7 @@
+## [1.0.0] — 2026-02-07
+### Major Update
+- the first version of WSPro. Added README file
+
 ## [0.4.0] — 2026-02-07
 ### Minor Update
 - added protocol verification
