@@ -49,7 +49,13 @@ class ScrapperService {
 
             Page page = context.newPage();
 
-            String startUrl = "https://" + request.domain();
+            String startUrl = request.domain().trim();
+            boolean hasProtocol = startUrl.startsWith("http");
+
+            if (!hasProtocol) {
+                startUrl = "https://" + startUrl;
+            }
+
             queue.add(new CrawlTask(startUrl, 0));
 
             while (!queue.isEmpty()) {

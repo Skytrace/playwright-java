@@ -1,3 +1,7 @@
+## [0.4.0] — 2026-02-07
+### Minor Update
+- added protocol verification
+
 ## [0.3.1] — 2026-02-05
 ### Patch
 - - remove ru description
