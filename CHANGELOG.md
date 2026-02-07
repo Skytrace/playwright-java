@@ -1,3 +1,7 @@
+## [1.0.2] — 2026-02-07
+### Patch
+- update gitignore and remove .idea
+
 ## [1.0.1] — 2026-02-07
 ### Patch
 - removed .idea folder. Fix .gitignore file
